@@ -1,0 +1,240 @@
+package uw.star.rts.analysis;
+import uw.star.rts.artifact.*;
+import uw.star.rts.extraction.ArtifactFactory;
+import uw.star.rts.util.*;
+
+import java.util.regex.*;
+
+import org.slf4j.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.*;
+import java.nio.charset.Charset;
+import java.nio.file.*;
+import java.util.*;
+
+// TODO : this should be re-implemented using http://code.google.com/p/google-diff-match-patch/ or http://code.google.com/p/java-diff-utils/
+
+
+/**
+ * Change Analysis (also known as impact analysis) is used to identify the entities that have 
+ * been modified or could be affected by the modifications made to the system under test
+ * 
+ * This implementation of the ChangeAnalysis class is dependent on the format of diff result files. 
+ * Diff result file is the output of source code comparison using Unix diff utility
+ * The format of the diff result file is as follows -
+ * 
+ * diff {options} firstFile secondFile
+ * n1[,n2] operation n3[,n4]
+ * diff {options} firstFile secondFile
+ * n1[,n2] operation n3[,n4]
+ * .....
+ * 
+ * note [] indicates optional characters. 
+ * n1[,n2] represents ranges of lines in the firstFile
+ * n3[,n4] represents ranges of lines in the secondFile
+ * operation is one of {a|c|d} which represents {add|change|delete}
+ * When optional characters not present (i.e. n2/n4), there is no "," after n1/n3 => n1 operation n3
+ *
+ * examples:
+ *diff --ignore-case --ignore-all-space --ignore-blank-lines --recursive /home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v0/xml-security/build/src/org/apache/xml/security/algorithms/Algorithm.java /home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v1/xml-security/build/src/org/apache/xml/security/algorithms/Algorithm.java
+ *107c107,108
+ *118,119c119,120
+ *diff --ignore-case --ignore-all-space --ignore-blank-lines --recursive /home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v0/xml-security/build/src/org/apache/xml/security/algorithms/encryption/EncryptionMethod.java /home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v1/xml-security/build/src/org/apache/xml/security/algorithms/encryption/EncryptionMethod.java
+ *440,447d439
+ *552,554d542
+ * 
+ * @author Weining Liu
+ *
+ */
+public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
+	
+	Logger log;
+	private Path diffResult;
+	private Program p;
+	
+	//modified statements of all source files in program p
+	private Map<String,List<StatementEntity>> modifiedStatements; //key: modification type {a|c|d},value :list of modified statements in p
+	
+	/**
+	 * Analyze changed entities in program p, 
+	 * Analysis is based on diff result file generated in repository factory class(e.g. SIRJavaFactory) 
+	 * This Class is only dependent on the format of the diff result file but has not knowledge of what is compared
+	 * It's  ChangeAnalysis script's responsibility to ensure all files are compared (all codekinds except binary files)
+	 * TODO: ideally, change analysis should be performed independent of ArtifactFactory, i.e. analyzing changes without needing to know where artifacts were extracted. 
+	 * this class should trigger a diff util and analyze the results. e.g. use @see http://www.apidiff.com/en/about/  
+	 * @param p
+	 * @param pPrime
+	 * @param diffResult - a text file contains all changes between p and pPrime.
+	 */
+	public TextualDifferencingChangeAnalysis(ArtifactFactory af, Program p, Program pPrime){
+		log = LoggerFactory.getLogger(TextualDifferencingChangeAnalysis.class.getName());
+		this.p=p;
+		this.diffResult= af.getChangeResultFile(p, pPrime);
+		modifiedStatements = new HashMap<String,List<StatementEntity>>();
+	}
+	/**
+	 * analyze changes between two given programs in the constructor 
+	 */
+	public void analyzeChange(){
+		Charset charset = Charset.forName("US-ASCII");
+		try(BufferedReader reader = Files.newBufferedReader(diffResult, charset)){
+			String line = null;
+			SourceFileEntity sf =null;
+			while((line=reader.readLine())!=null){
+				String firstFile="",secondFile="",oper="";
+				//line starts with diff - diff line
+				if(line.matches("^diff.*")){ //diff at the beginning of line and with any chars follow it
+					//log.debug("diff line : " + line );
+					//split by space, find firstFile and secondFile
+					for(String s: line.split(" ")){
+						if(!(s.equals("diff")||s.startsWith("-"))){//NOT diff or options
+							if(firstFile.isEmpty()){
+								firstFile = s;
+							}else if(secondFile.isEmpty()){
+								secondFile =s;
+							}else{
+								log.error("this String should not be here " + s);
+							}
+						}
+					}
+					log.debug("firstFile : " + firstFile+ ","+ " 2nd "+secondFile);
+					//find sourceFile object based on file path
+					sf = getSourceFileEntityByName(p,firstFile);
+
+				}else if(line.matches("\\d.*[acd]\\d+.*")){//any digit (1 or more) , any char (0 or more), a/c/d, any digit (1 or more)
+					//line starts with a number - operation line
+					//log.debug("operation line" + line);
+					//find operation, n1,n2,n3,n4
+					Matcher m = Pattern.compile("[acd]").matcher(line);
+					if(sf!=null&&m.find()){
+						//TODO: it's possible sf==null. e.g. Emma does not report interface class ,so interface classes are not in
+						//sourcefile entities, but if an interface changed, it will be in diff result file
+						// this is currently not a problem as there is no test case should cover an interface anyways! 
+						oper = line.substring(m.start(),m.end());
+						int[] n1n2= convertToLines(line.substring(0, m.start()));
+						//int[] n3n4 = convertToLines(line.substring(m.end())); don't really need this info.
+						//log.debug(oper+","+Arrays.toString(n1n2));
+
+						//update modified statements map
+						List<StatementEntity> stms = new ArrayList<>();
+						for(int i=0;i<n1n2.length;i++){//iterate list of statement numbers
+						    if(n1n2[i]==0&&oper.endsWith("a")) continue; //could add at line 0
+							//@BUG: here I assume source->statement linkage already exist. It's only true if extractEntities(Statement is called)
+							StatementEntity s =sf.getStatementByLineNumber(n1n2[i]);// need an O(1) operation here, otherwise performance would be horriable
+							if(s!=null) stms.add(s);  //s could be null as a modified statement may not be executable statement and in source file we only trace executable statements.
+							
+						}
+						//now stms contains a list of statements modified and executable
+						if(modifiedStatements.containsKey(oper))
+							stms.addAll(modifiedStatements.get(oper)); //add existing statements for the oper
+						modifiedStatements.put(oper, stms);
+					}
+				}else{	    		//error
+					log.error("can not match line " + line);
+				}
+
+			}
+
+		}catch(IOException e){
+			log.error("error in reading file " + diffResult);
+			e.printStackTrace();
+		}
+	}
+	
+/*	TODO: user java generic to provide a cleaner interface, for now , one method for each type
+ * public <T extends Entity> List<T> getModifiedCodeEntities(EntityType type){
+		
+		switch(type){
+			case STATEMENT  : return getModifiedStatements();
+			default:
+				log.error("unknown entity type " + type);
+				return null;
+		}
+	}*/
+	
+	public List<StatementEntity> getModifiedStatements(){
+		List<StatementEntity> stms = new ArrayList<StatementEntity>();
+		if(modifiedStatements.containsKey("a"))
+			stms.addAll(modifiedStatements.get("a"));
+		if(modifiedStatements.containsKey("d"))
+			stms.addAll(modifiedStatements.get("d"));	
+		if(modifiedStatements.containsKey("c"))
+				stms.addAll(modifiedStatements.get("c"));
+		return stms;
+	}
+	
+	/**
+	 * 
+	 * @param operCode {a|c|d}
+	 * @return
+	 */
+	public List<StatementEntity> getModifiedStatements(String operCode){
+		return new ArrayList(modifiedStatements.get(operCode));
+	}
+	
+	/**
+	 * use statement -> sourcefile linkages to cacluate modified source files.
+	 * A source file is modified where there is at least one statement in the source is modified
+	 * @return a list of source files that have at least one statement modified
+	 */
+	public List<SourceFileEntity> getModifiedSourceFiles(){
+		Set<SourceFileEntity> result = new HashSet<>();
+		for(StatementEntity stm: getModifiedStatements())
+			result.add(stm.getSourceFileEntity());
+		return new ArrayList(result);
+	}
+	
+	public List<SourceFileEntity> getModifiedSourceFiles(String operCode){
+		Set<SourceFileEntity> result = new HashSet<>();
+		for(StatementEntity stm: modifiedStatements.get(operCode))
+			result.add(stm.getSourceFileEntity());
+		return new ArrayList(result);
+	}
+	//TODO: get modified methods and classes??
+	/**
+	 * convert a n1,n2 to a list of lines
+	 * @param n1n2, n1[,n2], either one line or a range of lines
+	 * @return n1 if one line only, else list of lines [n1,n2] inclusive
+	 */
+	public int[] convertToLines(String n1n2){
+		int n1=-1,n2=-1;
+		int commaIdx = n1n2.indexOf(",");
+		if(commaIdx>-1){ //"," found
+			n1 = Integer.parseInt(n1n2.substring(0,commaIdx));
+			n2= Integer.parseInt(n1n2.substring(commaIdx+1));
+			int[] result = new int[n2-n1+1];
+			for(int i=0;i<=n2-n1;i++)
+				result[i]=n1+i;
+			return result;
+		}else{
+			n1 = Integer.parseInt(n1n2);
+			int[] result = new int[1];
+			result[0] = n1;
+			return result;
+		}
+	}
+	
+	
+	SourceFileEntity getSourceFileEntityByName(Program p,String fileName){
+		SourceFileEntity sfe =null;
+		int srcFileNameIdx = fileName.lastIndexOf("/"); 
+		if(srcFileNameIdx>-1){
+			String packageName = JavaFileParser.getJavaPackageName(fileName);
+			if(packageName==null) throw new IllegalArgumentException("package name not found in" + fileName);
+			String srcFileName = fileName.substring(srcFileNameIdx+1);
+	        log.debug("package name:" + packageName + " , srcFileName : " + srcFileName);
+			sfe = (SourceFileEntity)p.getEntityByName(EntityType.SOURCE, packageName+"."+srcFileName);
+			if(sfe==null){
+				log.error("source file " + fileName+ "not found in this program " + p.getName()+" -v"+p.getVersionNo());
+			}else{
+				log.debug("source file name is : " + sfe.toString());
+			}
+			
+		}else{
+			log.error("there is no / at all :" + fileName);
+		}
+		return sfe;
+	}
+}
