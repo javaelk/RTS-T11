@@ -8,6 +8,7 @@ import uw.star.rts.technique.TextualDifference;
 import uw.star.rts.technique.TextualDifference_Statement;
 import uw.star.rts.util.*;
 
+import java.io.File;
 import java.util.*;
 
 import org.junit.After;
@@ -22,6 +23,7 @@ public class TextualDifference_StatementTest {
 	@Before
 	public void setUp() throws Exception {
 		ArtifactFactory af =new SIRJavaFactory(); 
+		af.setExperimentRoot(PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT));
 		Application app = af.extract("apache-xml-security");
 		p=app.getProgram(ProgramVariant.orig, 0);
 		pPrime=app.getProgram(ProgramVariant.orig, 1);

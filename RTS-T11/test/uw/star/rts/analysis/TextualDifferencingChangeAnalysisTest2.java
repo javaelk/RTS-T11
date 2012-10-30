@@ -4,12 +4,14 @@ import static org.junit.Assert.*;
 
 
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
@@ -18,19 +20,22 @@ import uw.star.rts.analysis.EmmaCodeCoverageAnalyzer;
 import uw.star.rts.analysis.TextualDifferencingChangeAnalysis;
 import uw.star.rts.artifact.*;
 import uw.star.rts.extraction.SIRJavaFactory;
+import uw.star.rts.util.Constant;
+import uw.star.rts.util.PropertyUtil;
 
 public class TextualDifferencingChangeAnalysisTest2 {
-
-	String EXPERIMENTROOT = "C:\\Documents and Settings\\wliu\\My Documents\\personal\\Dropbox";
-	String appname = "apache-xml-security";
-	TextualDifferencingChangeAnalysis ca1,ca2;
-	Program p0,p1,p2;
+    //TODO: read experiment root from environment variable instead of hard code it in every test classes! 
+	static String appname = "apache-xml-security";
+	static TextualDifferencingChangeAnalysis ca1,ca2;
+	static Program p0,p1,p2;
+	static String EXPERIMENT_ROOT;
 	
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUp() throws Exception {
 		SIRJavaFactory sir = new SIRJavaFactory();
-		sir.setExperimentRoot(EXPERIMENTROOT);
+		EXPERIMENT_ROOT = PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT);
+		sir.setExperimentRoot(EXPERIMENT_ROOT);
 		Application testapp = sir.extract(appname);
 		p0 = testapp.getProgram(ProgramVariant.orig, 0);
 		p1= testapp.getProgram(ProgramVariant.orig, 1);
@@ -68,7 +73,7 @@ public class TextualDifferencingChangeAnalysisTest2 {
 	
 	@Test
 	public void analyzeTest1(){
-		String srcfilename = "/home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
+		String srcfilename = EXPERIMENT_ROOT+"/apache-xml-security/versions.alt/orig/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
 		SourceFileEntity src = ca1.getSourceFileEntityByName(p0,srcfilename);
 		ca1.analyzeChange();
 		List<StatementEntity> mod = ca1.getModifiedStatements();
@@ -92,7 +97,7 @@ public class TextualDifferencingChangeAnalysisTest2 {
 	}
 	@Test
 	public void parseSourceFileTest(){
-		String srcfilename = "/home/wliu/Dropbox/apache-xml-security/changes/beautifiedSrc/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
+		String srcfilename =EXPERIMENT_ROOT+"/apache-xml-security/versions.alt/orig/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
 		SourceFileEntity src = ca1.getSourceFileEntityByName(p0,srcfilename);
 		assertEquals("test file name","XPathFuncHereAPI.java",src.getSourceFileName());
 		assertEquals("test package name","org.apache.xml.security.utils",src.getPackageName());

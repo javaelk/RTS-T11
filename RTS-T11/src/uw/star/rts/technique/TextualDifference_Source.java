@@ -29,6 +29,7 @@ public class TextualDifference_Source extends TextualDifference {
 			stopwatch.start(CostFactor.CoverageAnalysisCost);
 		    CodeCoverage entityTrace = createCoverage(p);
 		    stopwatch.stop(CostFactor.CoverageAnalysisCost);
+		    
 			//2)compare the source files of the old and new versions of the program to identify the modified program statements
 			//analyzer should be able to call ArtifactFactory to fetch result files from disk
 
