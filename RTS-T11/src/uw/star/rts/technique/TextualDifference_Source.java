@@ -45,7 +45,7 @@ public class TextualDifference_Source extends TextualDifference {
 			stopwatch.start(CostFactor.ApplyTechniqueCost);
 			Set<TestCase> selectedTests = new HashSet<>();
 			for(SourceFileEntity stm : modified)
-				selectedTests.addAll(entityTrace.getLinkedEntitiesByColumn(stm)); 
+				selectedTests.addAll(entityTrace.getLinkedEntitiesByColumn(stm)); //row contains ALL test cases for the version p. 
 
 			//4) only select tests that were exist in P and are still applicable to pPrime
 			List<TestCase> results = new ArrayList<>();

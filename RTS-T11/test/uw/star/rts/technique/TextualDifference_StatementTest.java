@@ -2,6 +2,7 @@ package uw.star.rts.technique;
 
 import static org.junit.Assert.*;
 import uw.star.rts.artifact.*;
+import uw.star.rts.cost.PrecisionPredictionModel;
 import uw.star.rts.extraction.ArtifactFactory;
 import uw.star.rts.extraction.SIRJavaFactory;
 import uw.star.rts.technique.TextualDifference;
@@ -44,7 +45,7 @@ public class TextualDifference_StatementTest {
 	}
 	@Test
 	public void testPredictCost(){
-		assertEquals("test predict cost", 0.32,tech1.predictPrecision(),0.11);
+		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictor),0.11);
 	}
 
 }
