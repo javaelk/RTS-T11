@@ -8,9 +8,12 @@ import uw.star.rts.cost.CostFactor;
 import uw.star.rts.extraction.ArtifactFactory;
 import uw.star.rts.util.*;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 
 
 public class TextualDifference_Source extends TextualDifference {
@@ -67,4 +70,19 @@ public class TextualDifference_Source extends TextualDifference {
 			return stmTraces;
 		}
 	
+		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities){
+			//need to extract v1 class entities first 
+			Program v0 = testapp.getProgram(ProgramVariant.orig,0);
+			Program v1 = testapp.getProgram(ProgramVariant.orig,1);
+			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,v1,testapp.getTestSuite());
+			cca2.extractEntities(EntityType.STATEMENT);
+			cca2.extractEntities(EntityType.SOURCE);
+			
+			// find all modified SourceFile entities
+			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,v0,v1); //p and pPrime are always of same variant type
+			ca.analyzeChange(); 
+			List<SourceFileEntity> modified = ca.getModifiedSourceFiles();
+			//intersection of the two is the covered entities that are modified
+			return  CollectionUtils.intersection(coveredEntities, modified);
+		}
 }

@@ -1,12 +1,15 @@
 package uw.star.rts.technique;
 import java.util.*;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import uw.star.rts.analysis.*;
 import uw.star.rts.artifact.*;
 import uw.star.rts.cost.CostFactor;
 import uw.star.rts.cost.PrecisionPredictionModel;
 import uw.star.rts.cost.RWPrecisionPredictor;
 import uw.star.rts.cost.RWPrecisionPredictor2;
+import uw.star.rts.cost.RWPrecisionPredictor_multiChanges;
 import uw.star.rts.extraction.*;
 import uw.star.rts.util.*;
 
@@ -38,25 +41,33 @@ public abstract class TextualDifference extends Technique{
 	public double predictPrecision(PrecisionPredictionModel pm){
 		Program p = testapp.getProgram(ProgramVariant.orig, 0);
 		createCoverageCost.start(CostFactor.CoverageAnalysisCost);
-		CodeCoverage cc = createCoverage(p);
+		CodeCoverage<Entity> cc = createCoverage(p);
 		createCoverageCost.stop(CostFactor.CoverageAnalysisCost);
-		
+		        
 		switch(pm){
 		case RWPredictor:
-			return RWPrecisionPredictor.getPredicatedPercetageOfTestCaseSelected(cc, testSuite.getTestCaseByVersion(0));
+			return RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(0));
 		case RWPredictorRegression:
-			return RWPrecisionPredictor2.getPredicatedPercetageOfTestCaseSelected(cc, testSuite.getRegressionTestCasesByVersion(0));	
+			return RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(0));	
+		
+		case RWPrecisionPredictor_multiChanges:
+			//this prediction model would need to know number of changed covered entities (within covered entities)
+			List<TestCase> regressionTests = testapp.getTestSuite().getRegressionTestCasesByVersion(0);
+	        List<Entity> regressionTestCoveredEntities = cc.getCoveredEntities(regressionTests);
+			return RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities).size());
 		default:
-        	//log.error("unknow Precision Prediction Model : " + pm);     	
+        	//log.error("unknown Precision Prediction Model : " + pm);     	
 		}
 		return Double.MIN_VALUE;
 	}
 	
+
 	//use actual create coverage cost to predicate total analysis cost, as for textual differencing techniques, majority of the analysis cost is on coverage analysis.
 	
 	public long predictAnalysisCost(){
 		return createCoverageCost.getElapsedTime(CostFactor.CoverageAnalysisCost);
 	}
 
-   abstract CodeCoverage createCoverage(Program p);
+   abstract CodeCoverage<Entity> createCoverage(Program p);
+   abstract Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities);
 }

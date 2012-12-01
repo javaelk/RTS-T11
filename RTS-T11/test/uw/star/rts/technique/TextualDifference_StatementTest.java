@@ -46,6 +46,8 @@ public class TextualDifference_StatementTest {
 	@Test
 	public void testPredictCost(){
 		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictor),0.11);
+		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictorRegression),0.11);
+		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges),0.11);
 	}
 
 }
