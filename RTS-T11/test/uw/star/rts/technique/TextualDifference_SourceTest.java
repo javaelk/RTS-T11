@@ -48,7 +48,7 @@ public class TextualDifference_SourceTest {
 	}
 	@Test
 	public void testPredictCost(){
-		assertEquals("test predict cost", 0.64,tech2.predictPrecision(PrecisionPredictionModel.RWPredictor),0.1);
+		assertEquals("test predict cost", 0.64,tech2.predictPrecision(PrecisionPredictionModel.RWPredictor,p,pPrime),0.1);
 		//was 0.77
 	}
 

@@ -33,28 +33,26 @@ public abstract class TextualDifference extends Technique{
 		createCoverageCost = new StopWatch();
 	}
 	/**
-	 * Cost should be predicted based on first version of the program. 
-	 * Test Suite should only contains test applicable to the first version
+	 * Preidct test selection rate for pPrime, based on information of p using prediction model pm.
 	 * @return
 	 */
 	@Override
-	public double predictPrecision(PrecisionPredictionModel pm){
-		Program p = testapp.getProgram(ProgramVariant.orig, 0);
+	public double predictPrecision(PrecisionPredictionModel pm,Program p,Program pPrime){
 		createCoverageCost.start(CostFactor.CoverageAnalysisCost);
 		CodeCoverage<Entity> cc = createCoverage(p);
 		createCoverageCost.stop(CostFactor.CoverageAnalysisCost);
 		        
 		switch(pm){
 		case RWPredictor:
-			return RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(0));
+			return RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo()));
 		case RWPredictorRegression:
-			return RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(0));	
+			return RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()));	
 		
 		case RWPrecisionPredictor_multiChanges:
 			//this prediction model would need to know number of changed covered entities (within covered entities)
-			List<TestCase> regressionTests = testapp.getTestSuite().getRegressionTestCasesByVersion(0);
+			List<TestCase> regressionTests = testapp.getTestSuite().getRegressionTestCasesByVersion(p.getVersionNo());
 	        List<Entity> regressionTestCoveredEntities = cc.getCoveredEntities(regressionTests);
-			return RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities).size());
+			return RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size());
 		default:
         	//log.error("unknown Precision Prediction Model : " + pm);     	
 		}
@@ -69,5 +67,5 @@ public abstract class TextualDifference extends Technique{
 	}
 
    abstract CodeCoverage<Entity> createCoverage(Program p);
-   abstract Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities);
+   abstract Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p, Program pPrime);
 }

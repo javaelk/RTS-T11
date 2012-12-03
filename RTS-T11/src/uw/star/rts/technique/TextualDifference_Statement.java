@@ -77,15 +77,14 @@ public class TextualDifference_Statement extends TextualDifference {
 			return stmTraces;
 		}
 		
-		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities){
-			//need to extract v1 class entities first 
-			Program v0 = testapp.getProgram(ProgramVariant.orig,0);
-			Program v1 = testapp.getProgram(ProgramVariant.orig,1);
-			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,v1,testapp.getTestSuite());
+		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p, Program pPrime){
+			CodeCoverageAnalyzer cca1 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
+			cca1.extractEntities(EntityType.STATEMENT);
+			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
 			cca2.extractEntities(EntityType.STATEMENT);
 			
 			// find all modified SourceFile entities
-			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,v0,v1); //p and pPrime are always of same variant type
+			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<StatementEntity> modified = ca.getModifiedStatements();
 			//intersection of the two is the covered entities that are modified
