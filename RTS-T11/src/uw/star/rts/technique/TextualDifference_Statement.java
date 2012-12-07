@@ -72,16 +72,21 @@ public class TextualDifference_Statement extends TextualDifference {
 		 */
 		CodeCoverage createCoverage(Program p){
 			CodeCoverageAnalyzer cca = new EmmaCodeCoverageAnalyzer(af,testapp,p,testSuite);
-			cca.extractEntities(EntityType.STATEMENT);
+			//if(!p.containsType(EntityType.STATEMENT)) - for some reason this line would cause a null pointer exception
+				cca.extractEntities(EntityType.STATEMENT);
 			CodeCoverage stmTraces =  cca.createCodeCoverage(EntityType.STATEMENT);
 			return stmTraces;
 		}
 		
 		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p, Program pPrime){
-			CodeCoverageAnalyzer cca1 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
-			cca1.extractEntities(EntityType.STATEMENT);
-			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
-			cca2.extractEntities(EntityType.STATEMENT);
+			if(!p.containsType(EntityType.STATEMENT)){
+				CodeCoverageAnalyzer cca1 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
+				cca1.extractEntities(EntityType.STATEMENT);
+			}
+			if(!pPrime.containsType(EntityType.STATEMENT)){
+				CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
+				cca2.extractEntities(EntityType.STATEMENT);
+			}
 			
 			// find all modified SourceFile entities
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type

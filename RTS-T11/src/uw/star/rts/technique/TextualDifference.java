@@ -33,7 +33,7 @@ public abstract class TextualDifference extends Technique{
 		createCoverageCost = new StopWatch();
 	}
 	/**
-	 * Preidct test selection rate for pPrime, based on information of p using prediction model pm.
+	 * Predict test selection rate for pPrime, based on information of p using prediction model pm.
 	 * @return
 	 */
 	@Override
@@ -59,7 +59,40 @@ public abstract class TextualDifference extends Technique{
 		return Double.MIN_VALUE;
 	}
 	
+	/**
+	 * this is a performance improve version for evaluation purpose, run all prediction models at the same time to save time building coverage matrix 
+	 */
+	@Override
+	public Map<PrecisionPredictionModel,Double> predictPrecision(Program p,Program pPrime){
+		createCoverageCost.start(CostFactor.CoverageAnalysisCost);
+		CodeCoverage<Entity> cc = createCoverage(p);
+		createCoverageCost.stop(CostFactor.CoverageAnalysisCost);
 
+		Map<PrecisionPredictionModel,Double> results = new HashMap<>();
+
+		for(PrecisionPredictionModel pm: PrecisionPredictionModel.values()){        
+			switch(pm){
+			case RWPredictor:
+				results.put(PrecisionPredictionModel.RWPredictor,RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo())));
+				break;
+
+			case RWPredictorRegression:
+				results.put(PrecisionPredictionModel.RWPredictorRegression,RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
+				break;
+
+			case RWPrecisionPredictor_multiChanges:
+				//this prediction model would need to know number of changed covered entities (within covered entities)
+				List<TestCase> regressionTests = testapp.getTestSuite().getRegressionTestCasesByVersion(p.getVersionNo());
+				List<Entity> regressionTestCoveredEntities = cc.getCoveredEntities(regressionTests);
+				results.put(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges,RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size()));
+				break;
+
+			default:
+				//log.error("unknown Precision Prediction Model : " + pm);     	
+			}
+		}
+		return results;
+	}
 	//use actual create coverage cost to predicate total analysis cost, as for textual differencing techniques, majority of the analysis cost is on coverage analysis.
 	
 	public long predictAnalysisCost(){

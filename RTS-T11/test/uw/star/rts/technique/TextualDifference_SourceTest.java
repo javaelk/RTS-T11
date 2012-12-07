@@ -47,9 +47,13 @@ public class TextualDifference_SourceTest {
 		assertEquals("size of test cases applicable to v1",15,ts.getTestCaseByVersion(1).size());
 	}
 	@Test
-	public void testPredictCost(){
-		assertEquals("test predict cost", 0.64,tech2.predictPrecision(PrecisionPredictionModel.RWPredictor,p,pPrime),0.1);
-		//was 0.77
+	public void testPredictPrecision(){
+		assertEquals("test predict cost", 0.62,tech2.predictPrecision(PrecisionPredictionModel.RWPredictor,p,pPrime),0.01);
+
+		Map<PrecisionPredictionModel,Double> p1Prediction = tech2.predictPrecision(p,pPrime);
+		assertEquals("test predict cost", 0.62,p1Prediction.get(PrecisionPredictionModel.RWPredictor),0.11);
+		assertEquals("test predict cost", 0.63,p1Prediction.get(PrecisionPredictionModel.RWPredictorRegression),0.11);
+		assertEquals("test predict cost", 0.77,p1Prediction.get(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges),0.11);
 	}
 
 

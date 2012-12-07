@@ -64,19 +64,26 @@ public class TextualDifference_Source extends TextualDifference {
 		@Override
 		CodeCoverage createCoverage(Program p){
 			CodeCoverageAnalyzer cca = new EmmaCodeCoverageAnalyzer(af,testapp,p,testSuite);
-			cca.extractEntities(EntityType.STATEMENT);//fix bug:always need to extract statement to establish source->statement links, need this for change analysis later 
-			cca.extractEntities(EntityType.SOURCE);
+			if(!p.containsType(EntityType.STATEMENT))
+				cca.extractEntities(EntityType.STATEMENT);//fix bug:always need to extract statement to establish source->statement links, need this for change analysis later 
+			if(!p.containsType(EntityType.SOURCE))
+				cca.extractEntities(EntityType.SOURCE);
 			CodeCoverage stmTraces =  cca.createCodeCoverage(EntityType.SOURCE);
 			return stmTraces;
 		}
 	
 		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p,Program pPrime){
 			CodeCoverageAnalyzer cca1 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
-			cca1.extractEntities(EntityType.STATEMENT);
-			cca1.extractEntities(EntityType.SOURCE);
+			if(!p.containsType(EntityType.STATEMENT))
+				cca1.extractEntities(EntityType.STATEMENT);
+			if(!p.containsType(EntityType.SOURCE))
+				cca1.extractEntities(EntityType.SOURCE);
+			
 			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
-			cca2.extractEntities(EntityType.STATEMENT);
-			cca2.extractEntities(EntityType.SOURCE);
+			if(!pPrime.containsType(EntityType.STATEMENT))
+				cca2.extractEntities(EntityType.STATEMENT);
+			if(!pPrime.containsType(EntityType.SOURCE))
+				cca2.extractEntities(EntityType.SOURCE);
 			
 			// find all modified SourceFile entities
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
