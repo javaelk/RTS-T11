@@ -122,7 +122,7 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 						for(int i=0;i<n1n2.length;i++){//iterate list of statement numbers
 						    if(n1n2[i]==0&&oper.endsWith("a")) continue; //could add at line 0
 							//@BUG: here I assume source->statement linkage already exist. It's only true if extractEntities(Statement is called)
-							StatementEntity s =sf.getStatementByLineNumber(n1n2[i]);// need an O(1) operation here, otherwise performance would be horriable
+							StatementEntity s =sf.getStatementByLineNumber(n1n2[i]);// need an O(1) operation here, otherwise performance would be horrible
 							if(s!=null) stms.add(s);  //s could be null as a modified statement may not be executable statement and in source file we only trace executable statements.
 							
 						}

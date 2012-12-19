@@ -23,7 +23,7 @@ public class TextualDifference_Source extends TextualDifference {
 		this.setImplmentationName("uw.star.rts.technique.TextualDifference_Source");
 	}
 	
-	//TODO: verify algorithm steps with reference paper
+	//TODO: verify algorithm steps with reference paper.It's not clear whether coverage matrix is re-calculated for each version for reused. Should implement both options.
 	@Override	
 	public List<TestCase> selectTests(Program p,Program pPrime,StopWatch stopwatch){
  
