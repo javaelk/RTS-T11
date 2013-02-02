@@ -63,23 +63,19 @@ public class TextualDifference_Source extends TextualDifference {
 		 */
 		@Override
 		CodeCoverage createCoverage(Program p){
-			CodeCoverageAnalyzer cca = new EmmaCodeCoverageAnalyzer(af,testapp,p,testSuite);
-			if(!p.containsType(EntityType.STATEMENT))
-				cca.extractEntities(EntityType.STATEMENT);//fix bug:always need to extract statement to establish source->statement links, need this for change analysis later 
-			if(!p.containsType(EntityType.SOURCE))
-				cca.extractEntities(EntityType.SOURCE);
+			CodeCoverageAnalyzer cca = new JacocoCodeCoverageAnalyzer(af,testapp,p,testSuite);
 			CodeCoverage stmTraces =  cca.createCodeCoverage(EntityType.SOURCE);
 			return stmTraces;
 		}
 	
 		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p,Program pPrime){
-			CodeCoverageAnalyzer cca1 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
+			CodeCoverageAnalyzer cca1 = new JacocoCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
 			if(!p.containsType(EntityType.STATEMENT))
 				cca1.extractEntities(EntityType.STATEMENT);
 			if(!p.containsType(EntityType.SOURCE))
 				cca1.extractEntities(EntityType.SOURCE);
 			
-			CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
+			CodeCoverageAnalyzer cca2 = new JacocoCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
 			if(!pPrime.containsType(EntityType.STATEMENT))
 				cca2.extractEntities(EntityType.STATEMENT);
 			if(!pPrime.containsType(EntityType.SOURCE))
