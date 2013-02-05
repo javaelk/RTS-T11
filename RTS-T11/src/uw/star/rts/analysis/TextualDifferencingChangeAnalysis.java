@@ -131,7 +131,25 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 							stms.addAll(modifiedStatements.get(oper)); //add existing statements for the oper
 						modifiedStatements.put(oper, stms);
 					}
-				}else{	    		//error
+				}//TODO: test this and check against paper
+//				else if(line.matches("^Only in(.*)")){ //match Only in...
+//						//if a file only exist in old but not new, then every executable line in that file is considered deleted and should all be added to modified statements list
+//					Matcher m = Pattern.compile("^Only in(.*)").matcher(line);
+//					if(sf!=null&&m.find()){
+//						String fileOnlyin = m.group(1);
+//						//reformat and find the path to only in file
+//						Path fileOnlyinPath = Paths.get(fileOnlyin.trim().replaceAll(":","/"));
+//						if(p.getCodeFiles(CodeKind.SOURCE).contains(fileOnlyinPath)){ //only consider this if a file exist in p but not in pPrime.
+//							List<StatementEntity> stms = new ArrayList<>();
+//							SourceFileEntity src = (SourceFileEntity)p.getEntityByName(EntityType.SOURCE, fileOnlyinPath.getFileName().toString());
+//							stms.addAll(src.getExecutableStatements());
+//							if(modifiedStatements.containsKey("d"))
+//								stms.addAll(modifiedStatements.get(oper)); //add existing statements for the oper
+//							modifiedStatements.put(oper, stms);
+//						}
+//					}
+//				}
+			else{	    		//error
 					log.error("can not match line " + line);
 				}
 
@@ -227,7 +245,8 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 	        log.debug("package name:" + packageName + " , srcFileName : " + srcFileName);
 			sfe = (SourceFileEntity)p.getEntityByName(EntityType.SOURCE, packageName+"."+srcFileName);
 			if(sfe==null){
-				log.error("source file " + fileName+ "not found in this program " + p.getName()+" -v"+p.getVersionNo());
+					log.warn("source file " + fileName+ "not found in this program " + p.getName()+" -v"+p.getVersionNo() +
+							" as this is an interface class changed between versions but does not exist in source entity. Source entites are extracted from code coverage tool which does not report interface");
 			}else{
 				log.debug("source file name is : " + sfe.toString());
 			}

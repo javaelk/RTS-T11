@@ -1,5 +1,7 @@
 package uw.star.rts.technique;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import uw.star.rts.analysis.*;
@@ -14,12 +16,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class TextualDifference_Source extends TextualDifference {
 
+	Logger log;
+	
 	public TextualDifference_Source(){
 		super();
+		log = LoggerFactory.getLogger(TextualDifference_Source.class.getName());
 		this.setImplmentationName("uw.star.rts.technique.TextualDifference_Source");
 	}
 	
@@ -31,6 +38,7 @@ public class TextualDifference_Source extends TextualDifference {
 			//this trace contains test case as row, source file as columns
 			stopwatch.start(CostFactor.CoverageAnalysisCost);
 		    CodeCoverage entityTrace = createCoverage(p);
+		    entityTrace.serializeCompressedMatrixToCSV(Paths.get("output"+File.separator+"entityTrace"+DateUtils.now()+".txt"));
 		    stopwatch.stop(CostFactor.CoverageAnalysisCost);
 		    
 			//2)compare the source files of the old and new versions of the program to identify the modified program statements
@@ -42,13 +50,18 @@ public class TextualDifference_Source extends TextualDifference {
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<SourceFileEntity> modified = ca.getModifiedSourceFiles();
+			log.debug("modified source files " + DateUtils.now()+ " total : "+ modified.size() + modified);
 			stopwatch.stop(CostFactor.ChangeAnalysisCost);
 
 			//3)all test case that executed modified source statement are selected
 			stopwatch.start(CostFactor.ApplyTechniqueCost);
 			Set<TestCase> selectedTests = new HashSet<>();
-			for(SourceFileEntity stm : modified)
-				selectedTests.addAll(entityTrace.getLinkedEntitiesByColumn(stm)); //row contains ALL test cases for the version p. 
+			for(SourceFileEntity stm : modified){
+				List<TestCase> linkedEntities = entityTrace.getLinkedEntitiesByColumn(stm);
+				selectedTests.addAll(linkedEntities); //row contains ALL test cases for the version p.
+				log.debug("source file " + stm + " is modified ");
+				log.debug("select following test cases :" + linkedEntities +"\n\n");
+			}
 
 			//4) only select tests that were exist in P and are still applicable to pPrime
 			List<TestCase> results = new ArrayList<>();

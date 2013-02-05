@@ -1,5 +1,7 @@
 package uw.star.rts.technique;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -7,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uw.star.rts.analysis.ChangeAnalyzer;
 import uw.star.rts.analysis.CodeCoverageAnalyzer;
@@ -27,8 +31,10 @@ import uw.star.rts.extraction.ArtifactFactory;
 import uw.star.rts.util.*;
 public class TextualDifference_Statement extends TextualDifference {
 	
+	Logger log;
 	    public TextualDifference_Statement(){
 	    	super();
+			log = LoggerFactory.getLogger(TextualDifference_Statement.class.getName());
 	    	this.setImplmentationName("uw.star.rts.technique.TextualDifference_Statement");
 	    }
 	    
@@ -40,6 +46,7 @@ public class TextualDifference_Statement extends TextualDifference {
 			//this trace contains test case as row, statements as columns
 			sw.start(CostFactor.CoverageAnalysisCost);
 			CodeCoverage stmTraces = createCoverage(p);
+			stmTraces.serializeCompressedMatrixToCSV(Paths.get("output"+File.separator+"stmtrace"+DateUtils.now()+".txt"));
 			sw.stop(CostFactor.CoverageAnalysisCost);
 			
 			//2)compare the source files of the old and new versions of the program to identify the modified program statments
@@ -51,13 +58,18 @@ public class TextualDifference_Statement extends TextualDifference {
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<StatementEntity> modifiedStms = ca.getModifiedStatements();
+			log.debug("modified statements " + DateUtils.now()+ "total: " + modifiedStms.size() +  modifiedStms);
 			sw.stop(CostFactor.ChangeAnalysisCost);
 
 			//3)all test case that executed modified source statement are selected
 			sw.start(CostFactor.ApplyTechniqueCost);
 			Set<TestCase> selectedTests = new HashSet<>();
-			for(StatementEntity stm : modifiedStms)
-				selectedTests.addAll(stmTraces.getLinkedEntitiesByColumn(stm)); 
+			for(StatementEntity stm : modifiedStms){
+				List<TestCase> linkedEntities =stmTraces.getLinkedEntitiesByColumn(stm); 
+				selectedTests.addAll(linkedEntities); 
+				log.debug("statement " + stm + " is modified ");
+				log.debug("select following test cases :" + linkedEntities +"\n\n");
+			}
 			
 			//4) only select tests that are still applicable to pPrime
 			List<TestCase> results = new ArrayList<>();
