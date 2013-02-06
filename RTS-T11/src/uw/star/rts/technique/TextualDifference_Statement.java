@@ -107,4 +107,11 @@ public class TextualDifference_Statement extends TextualDifference {
 			//intersection of the two is the covered entities that are modified
 			return  CollectionUtils.intersection(coveredEntities, modified);
 		}
+		
+		protected int getNumModifiedEntities(Program p,Program pPrime){
+			// find all modified SourceFile entities
+			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
+			ca.analyzeChange(); 
+			return ca.getModifiedStatements().size();
+		}
 }
