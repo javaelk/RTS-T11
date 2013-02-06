@@ -2,6 +2,8 @@ package uw.star.rts.technique;
 import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uw.star.rts.analysis.*;
 import uw.star.rts.artifact.*;
@@ -26,6 +28,7 @@ public abstract class TextualDifference extends Technique{
 	ArtifactFactory af;
 	TestSuite testSuite;
 	StopWatch createCoverageCost;
+	static Logger log = LoggerFactory.getLogger(TextualDifference.class.getName());
 	
 	public void setApplication(Application app){
 		this.testapp=app;
@@ -93,8 +96,8 @@ public abstract class TextualDifference extends Technique{
 
 			case RWPrecisionPredictor_multiChanges:
 				//this prediction model would need to know number of changed covered entities (within covered entities)
-
-				results.put(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges,RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size()));
+				int mce = getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size();
+				results.put(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges,RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(),mce ));
 				break;
 				
 			case RWPrecisionPredictor3:

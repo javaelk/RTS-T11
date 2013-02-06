@@ -46,6 +46,7 @@ public class TextualDifference_Statement extends TextualDifference {
 			//this trace contains test case as row, statements as columns
 			sw.start(CostFactor.CoverageAnalysisCost);
 			CodeCoverage stmTraces = createCoverage(p);
+			log.debug("total #of stm entities is :" +  stmTraces.getColumns().size());
 			stmTraces.serializeCompressedMatrixToCSV(Paths.get("output"+File.separator+"stmtrace"+DateUtils.now()+".txt"));
 			sw.stop(CostFactor.CoverageAnalysisCost);
 			
@@ -53,12 +54,12 @@ public class TextualDifference_Statement extends TextualDifference {
 			//analyzer should be able to call ArtifactFactory to fetch result files from disk
 
 			//TODO: currently, CodeCoverageAnalyzer has to be called first. Because extraction of CodeEntities relies on 
-			// Emma xml/html reports. This can be fixed if a seperate parse is used to get statement enties, method entities etc.
+			// Emma xml/html reports. This can be fixed if a seperate p arse is used to get statement enties, method entities etc.
 			sw.start(CostFactor.ChangeAnalysisCost);
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<StatementEntity> modifiedStms = ca.getModifiedStatements();
-			log.debug("modified statements " + DateUtils.now()+ "total: " + modifiedStms.size() +  modifiedStms);
+			log.debug("modified statements " + DateUtils.now()+ "total: " + modifiedStms.size());
 			sw.stop(CostFactor.ChangeAnalysisCost);
 
 			//3)all test case that executed modified source statement are selected
@@ -105,7 +106,9 @@ public class TextualDifference_Statement extends TextualDifference {
 			ca.analyzeChange(); 
 			List<StatementEntity> modified = ca.getModifiedStatements();
 			//intersection of the two is the covered entities that are modified
-			return  CollectionUtils.intersection(coveredEntities, modified);
+			Collection<Entity> ce = CollectionUtils.intersection(coveredEntities, modified); 
+ 			log.debug("number of modified and covered statement entities between v"+p.getVersionNo()+ " and v" + pPrime.getVersionNo() + " is "+ ce.size());
+			return  ce;
 		}
 		
 		protected int getNumModifiedEntities(Program p,Program pPrime){

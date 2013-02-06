@@ -38,6 +38,7 @@ public class TextualDifference_Source extends TextualDifference {
 			//this trace contains test case as row, source file as columns
 			stopwatch.start(CostFactor.CoverageAnalysisCost);
 		    CodeCoverage entityTrace = createCoverage(p);
+		    log.debug("total #of src entities is :" +  entityTrace.getColumns().size());
 		    entityTrace.serializeCompressedMatrixToCSV(Paths.get("output"+File.separator+"SrcentityTrace_"+DateUtils.now()+".txt"));
 		    stopwatch.stop(CostFactor.CoverageAnalysisCost);
 		    
@@ -99,7 +100,9 @@ public class TextualDifference_Source extends TextualDifference {
 			ca.analyzeChange(); 
 			List<SourceFileEntity> modified = ca.getModifiedSourceFiles();
 			//intersection of the two is the covered entities that are modified
-			return  CollectionUtils.intersection(coveredEntities, modified);
+			Collection<Entity> ce = CollectionUtils.intersection(coveredEntities, modified); 
+ 			log.debug("number of modified and covered src entities between v"+p.getVersionNo()+ " and v" + pPrime.getVersionNo() + " is "+ ce.size());
+			return  ce;
 		}
 		
 		protected int getNumModifiedEntities(Program p,Program pPrime){
