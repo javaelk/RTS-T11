@@ -38,7 +38,7 @@ public class TextualDifference_Source extends TextualDifference {
 			//this trace contains test case as row, source file as columns
 			stopwatch.start(CostFactor.CoverageAnalysisCost);
 		    CodeCoverage entityTrace = createCoverage(p);
-		    log.debug("total #of src entities is :" +  entityTrace.getColumns().size());
+		    log.debug("total #of src entities of program v" + p.getVersionNo()+ " is :" +  entityTrace.getColumns().size());
 		    entityTrace.serializeCompressedMatrixToCSV(Paths.get("output"+File.separator+"SrcentityTrace_"+DateUtils.now()+".txt"));
 		    stopwatch.stop(CostFactor.CoverageAnalysisCost);
 		    
@@ -51,7 +51,7 @@ public class TextualDifference_Source extends TextualDifference {
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<SourceFileEntity> modified = ca.getModifiedSourceFiles();
-			log.debug("modified source files " + DateUtils.now()+ " total : "+ modified.size() + modified);
+			log.debug("modified source files between p"+p.getVersionNo() + " and p"+ pPrime.getVersionNo()+ " " + DateUtils.now()+ " total : "+ modified.size() + modified);
 			stopwatch.stop(CostFactor.ChangeAnalysisCost);
 
 			//3)all test case that executed modified source statement are selected

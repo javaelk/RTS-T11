@@ -59,7 +59,7 @@ public class TextualDifference_Statement extends TextualDifference {
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 
 			List<StatementEntity> modifiedStms = ca.getModifiedStatements();
-			log.debug("modified statements " + DateUtils.now()+ "total: " + modifiedStms.size());
+			log.debug("modified statements between p"+p.getVersionNo() + " and p"+ pPrime.getVersionNo()+ " " + DateUtils.now()+ "total: " + modifiedStms.size());
 			sw.stop(CostFactor.ChangeAnalysisCost);
 
 			//3)all test case that executed modified source statement are selected

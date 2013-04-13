@@ -46,8 +46,8 @@ public class TextualDifference_StatementTest {
 	@Test
 	public void testPredictPrecision(){
 		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictor,p,pPrime),0.11);
-		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictorRegression,p,pPrime),0.11);
-		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges,p,pPrime),0.11);
+		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictor_RegressionTestsOnly,p,pPrime),0.11);
+		assertEquals("test predict cost", 0.32,tech1.predictPrecision(PrecisionPredictionModel.RWPredictor_multiChanges,p,pPrime),0.11);
 		
 	}
 	
@@ -55,8 +55,8 @@ public class TextualDifference_StatementTest {
 	public void testPredictPrecisionMap(){
 		Map<PrecisionPredictionModel,Double> p1Prediction = tech1.predictPrecision(p,pPrime);
 		assertEquals("test predict cost", 0.32,p1Prediction.get(PrecisionPredictionModel.RWPredictor),0.11);
-		assertEquals("test predict cost", 0.32,p1Prediction.get(PrecisionPredictionModel.RWPredictorRegression),0.11);
-		assertEquals("test predict cost", 0.32,p1Prediction.get(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges),0.11);
+		assertEquals("test predict cost", 0.32,p1Prediction.get(PrecisionPredictionModel.RWPredictor_RegressionTestsOnly),0.11);
+		assertEquals("test predict cost", 0.32,p1Prediction.get(PrecisionPredictionModel.RWPredictor_multiChanges),0.11);
 		
 	}
 	

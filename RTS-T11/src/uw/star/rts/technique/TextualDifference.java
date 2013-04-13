@@ -9,10 +9,10 @@ import uw.star.rts.analysis.*;
 import uw.star.rts.artifact.*;
 import uw.star.rts.cost.CostFactor;
 import uw.star.rts.cost.PrecisionPredictionModel;
-import uw.star.rts.cost.RWPrecisionPredictor;
-import uw.star.rts.cost.RWPrecisionPredictor2;
-import uw.star.rts.cost.RWPrecisionPredictor3;
-import uw.star.rts.cost.RWPrecisionPredictor_multiChanges;
+import uw.star.rts.cost.RWPredictor;
+import uw.star.rts.cost.RWPredictor_RegressionTestsOnly;
+import uw.star.rts.cost.RWPredictor_multiChanges2;
+import uw.star.rts.cost.RWPredictor_multiChanges;
 import uw.star.rts.extraction.*;
 import uw.star.rts.util.*;
 
@@ -49,23 +49,21 @@ public abstract class TextualDifference extends Technique{
         
 		switch(pm){
 		case RWPredictor:
-			return RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo()));
-		case RWPredictorRegression:
-			return RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()));	
+			return RWPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo()));
+		case RWPredictor_RegressionTestsOnly:
+			return RWPredictor_RegressionTestsOnly.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()));	
 		
-		case RWPrecisionPredictor_multiChanges:
+		case RWPredictor_multiChanges:
 			//this prediction model would need to know number of changed covered entities (within covered entities)
 			List<TestCase> regressionTests = testapp.getTestSuite().getRegressionTestCasesByVersion(p.getVersionNo());
 	        List<Entity> regressionTestCoveredEntities = cc.getCoveredEntities(regressionTests);
-			return RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size());
+			return RWPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(), getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size());
 		
-		case RWPrecisionPredictor3:
-			List<TestCase> regressionTests1 = testapp.getTestSuite().getRegressionTestCasesByVersion(p.getVersionNo());
-	        List<Entity> regressionTestCoveredEntities1 = cc.getCoveredEntities(regressionTests1);
-			return RWPrecisionPredictor3.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()),getNumModifiedEntities(p,pPrime));
-		
+		case RWPredictor_multiChanges2:
+			return RWPredictor_multiChanges2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()),getNumModifiedEntities(p,pPrime));
+			
 		default:
-        	//log.error("unknown Precision Prediction Model : " + pm);     	
+        	log.warn("Prediction Model " + pm + " is not implemented");     	
 		}
 		return Double.MIN_VALUE;
 	}
@@ -87,25 +85,26 @@ public abstract class TextualDifference extends Technique{
 		for(PrecisionPredictionModel pm: PrecisionPredictionModel.values()){        
 			switch(pm){
 			case RWPredictor:
-				results.put(PrecisionPredictionModel.RWPredictor,RWPrecisionPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo())));
+				results.put(PrecisionPredictionModel.RWPredictor,RWPredictor.predictSelectionRate(cc, testSuite.getTestCaseByVersion(p.getVersionNo())));
 				break;
 
-			case RWPredictorRegression:
-				results.put(PrecisionPredictionModel.RWPredictorRegression,RWPrecisionPredictor2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
+			case RWPredictor_RegressionTestsOnly:
+				results.put(PrecisionPredictionModel.RWPredictor_RegressionTestsOnly,RWPredictor_RegressionTestsOnly.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
 				break;
 
-			case RWPrecisionPredictor_multiChanges:
+			case RWPredictor_multiChanges:
 				//this prediction model would need to know number of changed covered entities (within covered entities)
 				int mce = getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size();
-				results.put(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges,RWPrecisionPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(),mce ));
+				results.put(PrecisionPredictionModel.RWPredictor_multiChanges,RWPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(),mce ));
 				break;
 				
-			case RWPrecisionPredictor3:
-				results.put(PrecisionPredictionModel.RWPrecisionPredictor3,RWPrecisionPredictor3.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()),getNumModifiedEntities(p,pPrime)));
+			case RWPredictor_multiChanges2:
+				results.put(PrecisionPredictionModel.RWPredictor_multiChanges2,RWPredictor_multiChanges2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()),getNumModifiedEntities(p,pPrime)));
                 break;
                 
- 			default:
-				//log.error("unknown Precision Prediction Model : " + pm);     	
+    			
+			default:
+	        	log.warn("Prediction Model " + pm + " is not implemented");        	
 			}
 		}
 		return results;

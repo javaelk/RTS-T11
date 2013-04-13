@@ -52,8 +52,8 @@ public class TextualDifference_SourceTest {
 
 		Map<PrecisionPredictionModel,Double> p1Prediction = tech2.predictPrecision(p,pPrime);
 		assertEquals("test predict cost", 0.62,p1Prediction.get(PrecisionPredictionModel.RWPredictor),0.11);
-		assertEquals("test predict cost", 0.63,p1Prediction.get(PrecisionPredictionModel.RWPredictorRegression),0.11);
-		assertEquals("test predict cost", 0.77,p1Prediction.get(PrecisionPredictionModel.RWPrecisionPredictor_multiChanges),0.11);
+		assertEquals("test predict cost", 0.63,p1Prediction.get(PrecisionPredictionModel.RWPredictor_RegressionTestsOnly),0.11);
+		assertEquals("test predict cost", 0.77,p1Prediction.get(PrecisionPredictionModel.RWPredictor_multiChanges),0.11);
 	}
 
 
