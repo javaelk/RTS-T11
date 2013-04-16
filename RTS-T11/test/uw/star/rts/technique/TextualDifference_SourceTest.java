@@ -14,18 +14,19 @@ import java.util.*;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TextualDifference_SourceTest {
-	TextualDifference tech1,tech2;
-	Program p;
-	Program pPrime;
-	TestSuite ts;
-	@Before
-	public void setUp() throws Exception {
+	static TextualDifference tech1,tech2;
+	static Program p;
+	static Program pPrime;
+	static TestSuite ts;
+	@BeforeClass
+	public static void setUp() throws Exception {
 		ArtifactFactory af =new SIRJavaFactory(); 
 		af.setExperimentRoot(PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT));
-		Application app = af.extract("apache-xml-security");
+		Application app = af.extract("apache-xml-security",TraceType.CODECOVERAGE_EMMA);
 		p=app.getProgram(ProgramVariant.orig, 0);
 		pPrime=app.getProgram(ProgramVariant.orig, 1);
 		ts = app.getTestSuite();

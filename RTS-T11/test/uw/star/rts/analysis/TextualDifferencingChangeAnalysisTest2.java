@@ -36,7 +36,7 @@ public class TextualDifferencingChangeAnalysisTest2 {
 		SIRJavaFactory sir = new SIRJavaFactory();
 		EXPERIMENT_ROOT = PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT);
 		sir.setExperimentRoot(EXPERIMENT_ROOT);
-		Application testapp = sir.extract(appname);
+		Application testapp = sir.extract(appname,TraceType.CODECOVERAGE_EMMA);
 		p0 = testapp.getProgram(ProgramVariant.orig, 0);
 		p1= testapp.getProgram(ProgramVariant.orig, 1);
 		p2= testapp.getProgram(ProgramVariant.orig, 2);

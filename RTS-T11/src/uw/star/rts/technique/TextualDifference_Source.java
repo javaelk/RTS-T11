@@ -31,6 +31,7 @@ public class TextualDifference_Source extends TextualDifference {
 	}
 	
 	//TODO: verify algorithm steps with reference paper.It's not clear whether coverage matrix is re-calculated for each version for reused. Should implement both options.
+	
 	@Override	
 	public List<TestCase> selectTests(Program p,Program pPrime,StopWatch stopwatch){
  
@@ -77,19 +78,19 @@ public class TextualDifference_Source extends TextualDifference {
 		 */
 		@Override
 		CodeCoverage createCoverage(Program p){
-			CodeCoverageAnalyzer cca = new JacocoCodeCoverageAnalyzer(af,testapp,p,testSuite);
-			CodeCoverage stmTraces =  cca.createCodeCoverage(EntityType.SOURCE);
-			return stmTraces;
+			CodeCoverageAnalyzer cca = CodeCoverageAnalyzerFactory.create(af,testapp,p,testSuite);
+			CodeCoverage srcTraces =  cca.createCodeCoverage(EntityType.SOURCE);
+			return srcTraces;
 		}
 	
 		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p,Program pPrime){
-			CodeCoverageAnalyzer cca1 = new JacocoCodeCoverageAnalyzer(testapp.getRepository(),testapp,p,testapp.getTestSuite());
+			CodeCoverageAnalyzer cca1 =  CodeCoverageAnalyzerFactory.create(testapp.getRepository(),testapp,p,testapp.getTestSuite());
 			if(!p.containsType(EntityType.STATEMENT))
 				cca1.extractEntities(EntityType.STATEMENT);
 			if(!p.containsType(EntityType.SOURCE))
 				cca1.extractEntities(EntityType.SOURCE);
 			
-			CodeCoverageAnalyzer cca2 = new JacocoCodeCoverageAnalyzer(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
+			CodeCoverageAnalyzer cca2 =  CodeCoverageAnalyzerFactory.create(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
 			if(!pPrime.containsType(EntityType.STATEMENT))
 				cca2.extractEntities(EntityType.STATEMENT);
 			if(!pPrime.containsType(EntityType.SOURCE))
