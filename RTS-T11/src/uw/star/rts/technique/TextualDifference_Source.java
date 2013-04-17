@@ -85,14 +85,10 @@ public class TextualDifference_Source extends TextualDifference {
 	
 		protected Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p,Program pPrime){
 			CodeCoverageAnalyzer cca1 =  CodeCoverageAnalyzerFactory.create(testapp.getRepository(),testapp,p,testapp.getTestSuite());
-			if(!p.containsType(EntityType.STATEMENT))
-				cca1.extractEntities(EntityType.STATEMENT);
 			if(!p.containsType(EntityType.SOURCE))
 				cca1.extractEntities(EntityType.SOURCE);
 			
 			CodeCoverageAnalyzer cca2 =  CodeCoverageAnalyzerFactory.create(testapp.getRepository(),testapp,pPrime,testapp.getTestSuite());
-			if(!pPrime.containsType(EntityType.STATEMENT))
-				cca2.extractEntities(EntityType.STATEMENT);
 			if(!pPrime.containsType(EntityType.SOURCE))
 				cca2.extractEntities(EntityType.SOURCE);
 			
