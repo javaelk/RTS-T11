@@ -104,6 +104,40 @@ public class TextualDifferencingChangeAnalysisTest2 {
 		assertEquals("test src contains statement entities",29,src.getExecutableStatements().size());
 
 	}
+	
+	@Test
+	public void anayzeTest3(){
+		SIRJavaFactory sir2 = new SIRJavaFactory();
+		EXPERIMENT_ROOT = PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT);
+		sir2.setExperimentRoot(EXPERIMENT_ROOT);
+		Application testapp = sir2.extract("jacoco-core-releases-TC",TraceType.CODECOVERAGE_JACOCO);
+		Program p7 = testapp.getProgram(ProgramVariant.orig, 7);
+		Program p8= testapp.getProgram(ProgramVariant.orig, 8);
+		
+		CodeCoverageAnalyzer cca7= new JacocoCodeCoverageAnalyzer(sir2,testapp,p7,testapp.getTestSuite());
+		//this will populate statementeentities in source file, required before comparing two source files for line differences.
+		cca7.extractEntities(EntityType.SOURCE);
+		cca7.extractEntities(EntityType.CLAZZ);
+		cca7.extractEntities(EntityType.METHOD);
+		cca7.extractEntities(EntityType.STATEMENT); 
+		
+		CodeCoverageAnalyzer cca8 = new JacocoCodeCoverageAnalyzer(sir2,testapp,p8,testapp.getTestSuite());
+		//this will populate statementeentities in source file, required before comparing two source files for line differences.
+		cca8.extractEntities(EntityType.SOURCE);
+		cca8.extractEntities(EntityType.CLAZZ);
+		cca8.extractEntities(EntityType.METHOD);
+		cca8.extractEntities(EntityType.STATEMENT);
+		
+		
+		TextualDifferencingChangeAnalysis ta = new TextualDifferencingChangeAnalysis(sir2, p7,p8);
+		ta.analyzeChange();
+		List<SourceFileEntity> deletedSrc = ta.getModifiedSourceFiles("d");
+		boolean found = false;
+		for(SourceFileEntity src: deletedSrc)
+			if(src.getName().equals("org.jacoco.core.internal.instr.JumpProbe.java"))
+				found = true;
+		assertTrue(found);
+	}
 
 
 }

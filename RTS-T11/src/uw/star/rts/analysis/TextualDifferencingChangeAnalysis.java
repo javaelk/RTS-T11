@@ -145,8 +145,9 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 				}//This is not mentioned in the paper, only in v0 - deleted source, only in v1 - new source
 				else if(line.matches("^Only in(.*)")){ //match Only in...
 						//if a file only exist in old but not new, then every executable line in that file is considered deleted and should all be added to modified statements list
+					sf = null ; //reset sf
 					Matcher m = Pattern.compile("^Only in(.*)").matcher(line);
-					if(sf!=null&&m.find()){
+					if(m.find()){
 						String fileOnlyin = m.group(1);
 						//reformat and find the path to only in file
 						Path fileOnlyinPath = Paths.get(fileOnlyin.trim().replaceAll(": ","/"));
