@@ -27,7 +27,6 @@
 	<classpathentry kind="lib" path="/ARTS/lib/jtidy-r938.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/junit-4.10.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/log4j-1.2.16.jar"/>
-	<classpathentry kind="lib" path="/ARTS/lib/qdox-2.0-20101128.200019-2.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/resolver.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/slf4j-api-1.6.2.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/slf4j-log4j12-1.6.2.jar"/>
@@ -39,5 +38,6 @@
 	<classpathentry kind="lib" path="/ARTS/lib/xmlpublic.jar"/>
 	<classpathentry kind="lib" path="/ARTS/lib/yjp-controller-api-redist.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ARTS"/>
+	<classpathentry kind="lib" path="/ARTS/lib/qdox-2.0-20130706.124819-8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
