@@ -56,6 +56,4 @@ public class TextualDifference_SourceTest {
 		assertEquals("test predict cost", 0.63,p1Prediction.get(PrecisionPredictionModel.RWPredictor_RegressionTestsOnly),0.11);
 		assertEquals("test predict cost", 0.77,p1Prediction.get(PrecisionPredictionModel.RWPredictor_multiChanges),0.11);
 	}
-
-
 }

@@ -1,18 +1,23 @@
 package uw.star.rts.technique;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Multiset;
+
 import uw.star.rts.analysis.*;
 import uw.star.rts.artifact.*;
+import uw.star.rts.changeHistory.GitChangeHistoryParser;
 import uw.star.rts.cost.CostFactor;
 import uw.star.rts.cost.PrecisionPredictionModel;
 import uw.star.rts.cost.RWPredictor;
 import uw.star.rts.cost.RWPredictor_RegressionTestsOnly;
 import uw.star.rts.cost.RWPredictor_multiChanges2;
 import uw.star.rts.cost.RWPredictor_multiChanges;
+import uw.star.rts.cost.WeightedRWPrecisionPredictor;
 import uw.star.rts.extraction.*;
 import uw.star.rts.util.*;
 
@@ -102,7 +107,11 @@ public abstract class TextualDifference extends Technique{
 				results.put(PrecisionPredictionModel.RWPredictor_multiChanges2,RWPredictor_multiChanges2.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo()),getNumModifiedEntities(p,pPrime)));
                 break;
                 
-    			
+    		case WeightedRWPrecisionPredictor:
+			populateEntityChangeFrequency(p);
+			results.put(PrecisionPredictionModel.WeightedRWPrecisionPredictor,WeightedRWPrecisionPredictor.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
+			break;
+
 			default:
 	        	log.warn("Prediction Model " + pm + " is not implemented");        	
 			}
@@ -115,6 +124,29 @@ public abstract class TextualDifference extends Technique{
 		return createCoverageCost.getElapsedTime(CostFactor.CoverageAnalysisCost);
 	}
 
+	//this is a hack for Jacoco.core only, each entity in given program p is populated with a calculated change frequency
+	 void populateEntityChangeFrequency(Program p){
+		Map<SourceFileEntity,Integer> frequencyMap= new HashMap<>(); //each entity in p and it's number of changes 
+		
+		GitChangeHistoryParser parser = new GitChangeHistoryParser(Paths.get(
+				"/media/data/wliu/sir/jacoco-core-snapshots-TC/changeHistory/jacoco_core.changehistory.txt")); 
+		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "9e9cfaac707f36f013a10a4dd089f742a9aa149b"); 
+		for(Entity src: p.getCodeEntities(EntityType.SOURCE)){
+			StringBuilder convertedFilePath = new StringBuilder().append("org.jacoco.core/src/");
+			String srcName = src.getName().substring(0, src.getName().lastIndexOf("."));
+			convertedFilePath.append(srcName.replaceAll("\\.", "/"))
+			                 .append(".java");
+			log.debug("trying to find number of changes of " + convertedFilePath  + "count is " + ms.count(convertedFilePath.toString()));
+			frequencyMap.put((SourceFileEntity)src, ms.count(convertedFilePath.toString()));
+		}
+		int sum=0;
+		for(SourceFileEntity sfe: frequencyMap.keySet())
+		     sum += frequencyMap.get(sfe);
+		
+		for(SourceFileEntity sfe: frequencyMap.keySet())
+			sfe.setChangeFrequency((frequencyMap.get(sfe)*1.0)/sum);
+		
+	}
    abstract CodeCoverage<Entity> createCoverage(Program p);
    abstract Collection<Entity> getModifiedCoveredEntities(List<Entity> coveredEntities,Program p, Program pPrime);
    abstract int getNumModifiedEntities(Program p,Program pPrime);
