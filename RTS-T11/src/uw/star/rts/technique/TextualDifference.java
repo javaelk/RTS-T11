@@ -10,7 +10,9 @@ import com.google.common.collect.Multiset;
 
 import uw.star.rts.analysis.*;
 import uw.star.rts.artifact.*;
+import uw.star.rts.changeHistory.ChangeHistoryParser;
 import uw.star.rts.changeHistory.GitChangeHistoryParser;
+import uw.star.rts.changeHistory.SvnChangeHistoryParser;
 import uw.star.rts.cost.CostFactor;
 import uw.star.rts.cost.PrecisionPredictionModel;
 import uw.star.rts.cost.RWPredictor;
@@ -128,11 +130,16 @@ public abstract class TextualDifference extends Technique{
 	 void populateEntityChangeFrequency(Program p){
 		Map<SourceFileEntity,Integer> frequencyMap= new HashMap<>(); //each entity in p and it's number of changes 
 		
-		GitChangeHistoryParser parser = new GitChangeHistoryParser(Paths.get(
+/*		GitChangeHistoryParser parser = new GitChangeHistoryParser(Paths.get(
 				"/media/data/wliu/sir/jacoco-core-snapshots-TC/changeHistory/jacoco_core.changehistory.txt")); 
-		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "9e9cfaac707f36f013a10a4dd089f742a9aa149b"); 
+		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "9e9cfaac707f36f013a10a4dd089f742a9aa149b");
+*/		ChangeHistoryParser parser = new SvnChangeHistoryParser(Paths.get(
+				"/media/data/wliu/sir/apache-solr-core-snapshots-TC/changeHistory/changeHistory.txt")); 
+		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "r1487602"); 
+
 		for(Entity src: p.getCodeEntities(EntityType.SOURCE)){
-			StringBuilder convertedFilePath = new StringBuilder().append("org.jacoco.core/src/");
+			//StringBuilder convertedFilePath = new StringBuilder().append("org.jacoco.core/src/");
+			StringBuilder convertedFilePath = new StringBuilder().append("/lucene/dev/trunk/solr/core/src/java/");
 			String srcName = src.getName().substring(0, src.getName().lastIndexOf("."));
 			convertedFilePath.append(srcName.replaceAll("\\.", "/"))
 			                 .append(".java");
