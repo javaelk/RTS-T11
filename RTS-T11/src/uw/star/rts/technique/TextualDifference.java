@@ -100,9 +100,12 @@ public abstract class TextualDifference extends Technique{
 				break;
 
 			case RWPredictor_multiChanges:
+				//TODO:if(p.getApplication().isChangeFrequencySupported())
+				if(false){
 				//this prediction model would need to know number of changed covered entities (within covered entities)
 				int mce = getModifiedCoveredEntities(regressionTestCoveredEntities,p,pPrime).size();
 				results.put(PrecisionPredictionModel.RWPredictor_multiChanges,RWPredictor_multiChanges.predictSelectionRate(regressionTestCoveredEntities.size(),mce ));
+    			}
 				break;
 				
 			case RWPredictor_multiChanges2:
@@ -110,8 +113,11 @@ public abstract class TextualDifference extends Technique{
                 break;
                 
     		case WeightedRWPrecisionPredictor:
-			populateEntityChangeFrequency(p);
-			results.put(PrecisionPredictionModel.WeightedRWPrecisionPredictor,WeightedRWPrecisionPredictor.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
+			   //TODO:if(p.getApplication().isChangeFrequencySupported())
+    			if(false){
+    			populateEntityChangeFrequency(p);
+			    results.put(PrecisionPredictionModel.WeightedRWPrecisionPredictor,WeightedRWPrecisionPredictor.predictSelectionRate(cc, testSuite.getRegressionTestCasesByVersion(p.getVersionNo())));
+    			}
 			break;
 
 			default:
@@ -126,20 +132,23 @@ public abstract class TextualDifference extends Technique{
 		return createCoverageCost.getElapsedTime(CostFactor.CoverageAnalysisCost);
 	}
 
-	//this is a hack for Jacoco.core only, each entity in given program p is populated with a calculated change frequency
+
 	 void populateEntityChangeFrequency(Program p){
 		Map<SourceFileEntity,Integer> frequencyMap= new HashMap<>(); //each entity in p and it's number of changes 
-		
-/*		GitChangeHistoryParser parser = new GitChangeHistoryParser(Paths.get(
-				"/media/data/wliu/sir/jacoco-core-snapshots-TC/changeHistory/jacoco_core.changehistory.txt")); 
-		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "9e9cfaac707f36f013a10a4dd089f742a9aa149b");
-*/		ChangeHistoryParser parser = new SvnChangeHistoryParser(Paths.get(
-				"/media/data/wliu/sir/apache-solr-core-snapshots-TC/changeHistory/changeHistory.txt")); 
-		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "r1487602"); 
 
+		//this is a hack each entity in given program p is populated with a calculated change frequency
+		//TODO: these information should be in the xml configuration, path, v0 sha code
+		ChangeHistoryParser parser = new GitChangeHistoryParser(Paths.get(
+				"/media/data/wliu/sir/jacoco-core-snapshots-TM/changeHistory/jacoco_core.changehistory.txt")); 
+		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "9e9cfaac707f36f013a10a4dd089f742a9aa149b");
+
+/*		ChangeHistoryParser parser = new SvnChangeHistoryParser(Paths.get(
+				"/media/data/wliu/sir/apache-solr-core-snapshots-TM/changeHistory/changeHistory.txt")); 
+		Multiset<String> ms = parser.getChangeFrequency(EntityType.SOURCE, "r1487602"); 
+*/
 		for(Entity src: p.getCodeEntities(EntityType.SOURCE)){
-			//StringBuilder convertedFilePath = new StringBuilder().append("org.jacoco.core/src/");
-			StringBuilder convertedFilePath = new StringBuilder().append("/lucene/dev/trunk/solr/core/src/java/");
+			StringBuilder convertedFilePath = new StringBuilder().append("org.jacoco.core/src/");
+			//StringBuilder convertedFilePath = new StringBuilder().append("/lucene/dev/trunk/solr/core/src/java/");
 			String srcName = src.getName().substring(0, src.getName().lastIndexOf("."));
 			convertedFilePath.append(srcName.replaceAll("\\.", "/"))
 			                 .append(".java");

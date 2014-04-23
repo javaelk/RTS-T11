@@ -1,6 +1,8 @@
 package uw.star.rts.analysis;
 import uw.star.rts.artifact.*;
+
 import com.google.common.collect.Sets;
+
 import uw.star.rts.extraction.ArtifactFactory;
 import uw.star.rts.util.*;
 
@@ -9,6 +11,7 @@ import java.util.regex.*;
 import org.slf4j.*;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.*;
 import java.nio.charset.Charset;
@@ -50,16 +53,16 @@ import java.util.*;
  *
  */
 public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
-	
+
 	Logger log;
 	private Path diffResult;
 	private Program p;
-	
+
 	//modified statements of all source files in program p
 	private Map<String,Set<StatementEntity>> modifiedStatementsMap; //key: modification type {a|c|d},value :list of modified statements in p
 	//modified source files in program p
 	private Map<String,Set<SourceFileEntity>> modifiedSrcsMap; //key: modification type {a|c|d},value :list of modified sources in p
-	
+
 	/**
 	 * Analyze changed entities in program p, 
 	 * Analysis is based on diff result file generated in repository factory class(e.g. SIRJavaFactory) 
@@ -131,20 +134,20 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 						//update modified statements map
 						Set<StatementEntity> stms = Sets.newHashSet();
 						for(int i=0;i<n1n2.length;i++){//iterate list of statement numbers
-						    if(n1n2[i]==0&&oper.endsWith("a")) continue; //could add at line 0
+							if(n1n2[i]==0&&oper.endsWith("a")) continue; //could add at line 0
 							//@BUG: here I assume source->statement linkage already exist. It's only true if extractEntities(Statement is called)
 							StatementEntity s =sf.getStatementByLineNumber(n1n2[i]);// need an O(1) operation here, otherwise performance would be horrible
 							//@BUG, it's fine if a stm is modified but it's not executable, we don't need to add it to modifiedStm list, but we still
 							//need to add the sourcefile to modified source list. 
 							if(s!=null) stms.add(s);  //s could be null as a modified statement may not be executable statement and in source file we only trace executable statements.
-							
+
 						}
 						//now stms contains a list of statements modified and executable
 						modifiedStatementsMap.get(oper).addAll(stms);
 					}
 				}//This is not mentioned in the paper, only in v0 - deleted source, only in v1 - new source
 				else if(line.matches("^Only in(.*)")){ //match Only in...
-						//if a file only exist in old but not new, then every executable line in that file is considered deleted and should all be added to modified statements list
+					//if a file only exist in old but not new, then every executable line in that file is considered deleted and should all be added to modified statements list
 					sf = null ; //reset sf
 					Matcher m = Pattern.compile("^Only in(.*)").matcher(line);
 					if(m.find()){
@@ -154,13 +157,13 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 						if(p.getCodeFiles(CodeKind.SOURCE).contains(fileOnlyinPath)){ //only consider this if a file exist in p but not in pPrime.
 							SourceFileEntity src = getSourceFileEntityByName(p,fileOnlyinPath.toString());
 							if(src!=null){
-							    modifiedStatementsMap.get("d").addAll(src.getExecutableStatements());
-							    modifiedSrcsMap.get("d").add(src);
+								modifiedStatementsMap.get("d").addAll(src.getExecutableStatements());
+								modifiedSrcsMap.get("d").add(src);
 							}
 						}
 					}
 				}
-			else{	    		//error
+				else{	    		//error
 					log.error("can not match line " + line);
 				}
 
@@ -171,10 +174,10 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 			e.printStackTrace();
 		}
 	}
-	
-/*	TODO: user java generic to provide a cleaner interface, for now , one method for each type
- * public <T extends Entity> List<T> getModifiedCodeEntities(EntityType type){
-		
+
+	/*	TODO: user java generic to provide a cleaner interface, for now , one method for each type
+	 * public <T extends Entity> List<T> getModifiedCodeEntities(EntityType type){
+
 		switch(type){
 			case STATEMENT  : return getModifiedStatements();
 			default:
@@ -182,17 +185,17 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 				return null;
 		}
 	}*/
-	
+
 	//modified statements does not contain new statements in pPrime
 	public List<StatementEntity> getModifiedStatements(){
 		List<StatementEntity> stms = new ArrayList<StatementEntity>();
 		if(modifiedStatementsMap.containsKey("d"))
 			stms.addAll(modifiedStatementsMap.get("d"));	
 		if(modifiedStatementsMap.containsKey("c"))
-				stms.addAll(modifiedStatementsMap.get("c"));
+			stms.addAll(modifiedStatementsMap.get("c"));
 		return stms;
 	}
-	
+
 	/**
 	 * 
 	 * @param operCode {a|c|d}
@@ -201,7 +204,7 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 	public List<StatementEntity> getModifiedStatements(String operCode){
 		return new ArrayList<StatementEntity>(modifiedStatementsMap.get(operCode));
 	}
-	
+
 	/**
 	 * can NOT use statement -> sourcefile linkages to calculate modified source files.
 	 * There are cases where modified statement is not an executable statement which will be dumped
@@ -211,11 +214,11 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 	 * @return a list of source files that have been modified
 	 */
 	public List<SourceFileEntity> getModifiedSourceFiles(){
-        Set<SourceFileEntity> resultSet =  modifiedSrcsMap.get("c");
-        resultSet.addAll(modifiedSrcsMap.get("d"));
+		Set<SourceFileEntity> resultSet =  modifiedSrcsMap.get("c");
+		resultSet.addAll(modifiedSrcsMap.get("d"));
 		return new ArrayList<SourceFileEntity>(resultSet);
 	}
-	
+
 	public List<SourceFileEntity> getModifiedSourceFiles(String operCode){
 		return new ArrayList<SourceFileEntity>(modifiedSrcsMap.get(operCode));
 	}
@@ -242,21 +245,21 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 			return result;
 		}
 	}
-	
-/**
- * return null if the file name doesn't exist in program p, otherwise return the sourcefile entity
- * 4 possible scenarios - given file doesn't exist
- * given file is not in list of source code (regardless it's java file or not)
- * given file is not a java file
- * given file is java but doesn't have package name
- * @param p
- * @param fileName
- * @return
- */
+
+	/**
+	 * return null if the file name doesn't exist in program p, otherwise return the sourcefile entity
+	 * 4 possible scenarios - given file doesn't exist
+	 * given file is not in list of source code (regardless it's java file or not)
+	 * given file is not a java file
+	 * given file is java but doesn't have package name
+	 * @param p
+	 * @param fileName
+	 * @return
+	 */
 	SourceFileEntity getSourceFileEntityByName(Program p,String fileName){
 		SourceFileEntity sfe =null;
 		int srcFileNameIdx = fileName.lastIndexOf("/");
-		
+
 		if(srcFileNameIdx>-1){
 			String packageName = JavaFileParser.getJavaPackageName(fileName);
 			if(packageName==null) { 
@@ -273,10 +276,10 @@ public class TextualDifferencingChangeAnalysis implements ChangeAnalyzer{
 			}else{
 				log.debug("source file name is : " + sfe.toString());
 			}
-			
+
 		}else{
 			log.error("there is no / at all :" + fileName);
 		}
 		return sfe;
-	}
+		}
 }

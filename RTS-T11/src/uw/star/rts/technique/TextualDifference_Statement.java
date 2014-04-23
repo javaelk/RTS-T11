@@ -39,7 +39,6 @@ public class TextualDifference_Statement extends TextualDifference {
 	    	this.setImplmentationName("uw.star.rts.technique.TextualDifference_Statement");
 	    }
 	    
-	//TODO: verify algorithm steps with reference paper
 		public List<TestCase> selectTests(Program p,Program pPrime,StopWatch sw){
 			
 
@@ -55,7 +54,7 @@ public class TextualDifference_Statement extends TextualDifference {
 			//analyzer should be able to call ArtifactFactory to fetch result files from disk
 
 			//TODO: currently, CodeCoverageAnalyzer has to be called first. Because extraction of CodeEntities relies on 
-			// Emma xml/html reports. This can be fixed if a seperate p arse is used to get statement enties, method entities etc.
+			// Emma xml/html reports. This can be fixed if a seperate parse is used to get statement enties, method entities etc.
 			sw.start(CostFactor.ChangeAnalysisCost);
 			ChangeAnalyzer ca = new TextualDifferencingChangeAnalysis(af,p,pPrime); //p and pPrime are always of same variant type
 			ca.analyzeChange(); 

@@ -5,18 +5,13 @@ import static org.junit.Assert.*;
 
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-
 import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.w3c.dom.Document;
 
 import uw.star.rts.analysis.CodeCoverageAnalyzer;
-import uw.star.rts.analysis.EmmaCodeCoverageAnalyzer;
 import uw.star.rts.analysis.TextualDifferencingChangeAnalysis;
 import uw.star.rts.artifact.*;
 import uw.star.rts.extraction.SIRJavaFactory;
@@ -25,7 +20,7 @@ import uw.star.rts.util.PropertyUtil;
 
 public class TextualDifferencingChangeAnalysisTest2 {
     //TODO: read experiment root from environment variable instead of hard code it in every test classes! 
-	static String appname = "apache-xml-security";
+	static String appname = "apache-xml-security-releases-TC";
 	static TextualDifferencingChangeAnalysis ca1,ca2;
 	static Program p0,p1,p2;
 	static String EXPERIMENT_ROOT;
@@ -36,20 +31,20 @@ public class TextualDifferencingChangeAnalysisTest2 {
 		SIRJavaFactory sir = new SIRJavaFactory();
 		EXPERIMENT_ROOT = PropertyUtil.getPropertyByName("config"+File.separator+"ARTSConfiguration.property",Constant.EXPERIMENTROOT);
 		sir.setExperimentRoot(EXPERIMENT_ROOT);
-		Application testapp = sir.extract(appname,TraceType.CODECOVERAGE_EMMA);
+		Application testapp = sir.extract(appname,TraceType.CODECOVERAGE_JACOCO);
 		p0 = testapp.getProgram(ProgramVariant.orig, 0);
 		p1= testapp.getProgram(ProgramVariant.orig, 1);
 		p2= testapp.getProgram(ProgramVariant.orig, 2);
 		ca1 = new TextualDifferencingChangeAnalysis(sir, p0,p1);
 		ca2 = new TextualDifferencingChangeAnalysis(sir, p1,p2);
-		CodeCoverageAnalyzer cca = new EmmaCodeCoverageAnalyzer(sir,testapp,p0,testapp.getTestSuite());
+		CodeCoverageAnalyzer cca = new JacocoCodeCoverageAnalyzer(sir,testapp,p0,testapp.getTestSuite());
 		//this will populate statementeentities in source file, required before comparing two source files for line differences.
 		cca.extractEntities(EntityType.SOURCE);
 		cca.extractEntities(EntityType.CLAZZ);
 		cca.extractEntities(EntityType.METHOD);
 		cca.extractEntities(EntityType.STATEMENT); 
 		
-		CodeCoverageAnalyzer cca2 = new EmmaCodeCoverageAnalyzer(sir,testapp,p1,testapp.getTestSuite());
+		CodeCoverageAnalyzer cca2 = new JacocoCodeCoverageAnalyzer(sir,testapp,p1,testapp.getTestSuite());
 		//this will populate statementeentities in source file, required before comparing two source files for line differences.
 		cca2.extractEntities(EntityType.SOURCE);
 		cca2.extractEntities(EntityType.CLAZZ);
@@ -97,7 +92,7 @@ public class TextualDifferencingChangeAnalysisTest2 {
 	}
 	@Test
 	public void parseSourceFileTest(){
-		String srcfilename =EXPERIMENT_ROOT+"/apache-xml-security/versions.alt/orig/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
+		String srcfilename =EXPERIMENT_ROOT+"/apache-xml-security-releases-TC/versions.alt/orig/v1/xml-security/build/src/org/apache/xml/security/utils/XPathFuncHereAPI.java";
 		SourceFileEntity src = ca1.getSourceFileEntityByName(p0,srcfilename);
 		assertEquals("test file name","XPathFuncHereAPI.java",src.getSourceFileName());
 		assertEquals("test package name","org.apache.xml.security.utils",src.getPackageName());
